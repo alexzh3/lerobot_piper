@@ -50,7 +50,7 @@ else
   git -C lerobot pull --ff-only
 fi
 
-uv pip install --python "$ROOT_DIR/.venv/bin/python" -e "$ROOT_DIR/lerobot[feetech,dataset]" "${UV_CACHE_ARGS[@]}"
+uv pip install --python "$ROOT_DIR/.venv/bin/python" -e "$ROOT_DIR/lerobot[feetech,dataset,viz]" "${UV_CACHE_ARGS[@]}"
 uv pip install --python "$ROOT_DIR/.venv/bin/python" python-can piper_sdk piper_control "${UV_CACHE_ARGS[@]}"
 
 if [ ! -d lerobot_robot_piper/.git ]; then

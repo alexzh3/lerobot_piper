@@ -3,5 +3,7 @@
 .uv-python/
 lerobot/
 lerobot_robot_piper/
+outputs/
+datasets/
 __pycache__/
 *.py[cod]

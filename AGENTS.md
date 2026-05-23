@@ -1,5 +1,3 @@
-@/home/dfki.uni-bremen.de/azheng/.codex/RTK.md
-
 # Project Context
 
 This repository sets up teleoperation with:
@@ -119,3 +117,41 @@ lerobot-teleoperate \
 Set `SO101_PORT` to the stable SO101 adapter path found under `/dev/serial/by-id/`.
 
 Use `./scripts/teleop_piper_so101_no_cameras.sh` for the first smoke test. The Piper plugin defaults to OpenCV camera index `4`; if `/dev/video4` is absent, teleop fails during camera connect. Disable cameras with `--robot.cameras='{}'` until camera discovery is configured intentionally.
+
+# Cameras
+
+Run camera discovery before camera-enabled teleop:
+
+```bash
+lerobot-find-cameras opencv
+```
+
+This writes captured images to `outputs/captured_images/`; keep `outputs/` ignored and do not commit captured images.
+
+Observed cameras on this machine included `/dev/video0`, `/dev/video2`, and `/dev/video4`; `/dev/video4` worked for the wrist camera here. Users must run discovery on their own machine because camera indices can change.
+
+Use camera-enabled teleop only after selecting the camera:
+
+```bash
+PIPER_CAMERA=/dev/video0 DISPLAY_DATA=true ./scripts/teleop_piper_so101_with_camera.sh
+```
+
+`--display_data=true` requires `rerun-sdk`; install LeRobot with `.[feetech,dataset,viz]` or run `uv pip install 'lerobot[viz]'` in the active environment.
+
+# Recording
+
+Use the same teleoperator id for teleoperation, recording, and evaluation because LeRobot stores calibration files by id. Current id:
+
+```bash
+export SO101_ID=so101_leader_piper
+```
+
+Tiny smoke dataset helper:
+
+```bash
+PIPER_CAMERA=/dev/video0 ./scripts/record_piper_so101_smoke.sh
+```
+
+The helper writes to `~/robot_ws/datasets` by default. Do not commit local datasets or captured camera outputs.
+
+Known issue: the end effector/gripper path is not working yet. Avoid workflows that depend on reliable gripper control until that mapping/control path is fixed.

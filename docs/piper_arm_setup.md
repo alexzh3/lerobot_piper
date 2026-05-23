@@ -187,10 +187,10 @@ Install LeRobot with SO101/Feetech support:
 ```bash
 git clone https://github.com/huggingface/lerobot.git
 cd lerobot
-uv pip install -e ".[feetech,dataset]"
+uv pip install -e ".[feetech,dataset,viz]"
 ```
 
-The SO101 setup needs the Feetech SDK extra. The dataset extra is also installed because `lerobot-record --help` imports dataset dependencies.
+The SO101 setup needs the Feetech SDK extra. The dataset extra is also installed because `lerobot-record --help` imports dataset dependencies. The viz extra is required when using `--display_data=true`.
 
 Sanity checks:
 
@@ -263,6 +263,102 @@ Or use:
 ```
 
 The Piper plugin defaults to a wrist camera at OpenCV index `4`. If `/dev/video4` is not present, teleop fails with `Failed to open OpenCVCamera(4)`. The no-camera smoke test disables cameras with `--robot.cameras='{}'`.
+
+## Camera Discovery and Camera Teleop
+
+Discover available OpenCV cameras:
+
+```bash
+source .venv/bin/activate
+lerobot-find-cameras opencv
+```
+
+This writes captured test images under `outputs/captured_images/`. The `outputs/` directory is ignored by git and should not be committed.
+
+Example result on this machine:
+
+```text
+Camera #0: /dev/video0, YUYV, 640x480, 30 fps
+Camera #1: /dev/video2, GREY, 640x360, 30 fps
+Camera #2: /dev/video4, YUYV, 640x480, 30 fps
+```
+
+The working wrist camera here was `/dev/video4`, but users must run discovery on their own machine and choose the correct device.
+
+Camera-enabled teleop:
+
+```bash
+export PIPER_CAMERA=/dev/video4
+
+lerobot-teleoperate \
+  --robot.type=piper \
+  --robot.can_interface=can0 \
+  --robot.bitrate=1000000 \
+  --robot.include_gripper=true \
+  --robot.use_degrees=false \
+  --robot.cameras="{\"wrist\": {\"type\": \"opencv\", \"index_or_path\": \"$PIPER_CAMERA\", \"width\": 640, \"height\": 480, \"fps\": 30, \"fourcc\": \"MJPG\"}}" \
+  --teleop.type=so101_leader \
+  --teleop.port="$SO101_PORT" \
+  --teleop.id=so101_leader_piper \
+  --teleop.use_degrees=false \
+  --display_data=true
+```
+
+Or use:
+
+```bash
+PIPER_CAMERA=/dev/video0 DISPLAY_DATA=true ./scripts/teleop_piper_so101_with_camera.sh
+```
+
+`--display_data=true` requires `rerun-sdk`, installed through `lerobot[viz]`.
+
+## Record a Tiny Smoke Dataset
+
+LeRobot's real-robot tutorial frames the workflow as teleoperation, recording trajectories, then training a policy. Use the same teleoperator `id` for teleoperation, recording, and evaluation because LeRobot stores calibration files under that id.
+
+Current calibration id:
+
+```bash
+export SO101_ID=so101_leader_piper
+```
+
+Create a dataset directory:
+
+```bash
+mkdir -p ~/robot_ws/datasets
+```
+
+Record a tiny smoke dataset:
+
+```bash
+lerobot-record \
+  --robot.type=piper \
+  --robot.can_interface=can0 \
+  --robot.bitrate=1000000 \
+  --robot.include_gripper=true \
+  --robot.use_degrees=false \
+  --robot.cameras='{"front": {"type": "opencv", "index_or_path": 0, "width": 640, "height": 480, "fps": 30, "fourcc": "MJPG"}}' \
+  --teleop.type=so101_leader \
+  --teleop.port="$SO101_PORT" \
+  --teleop.id=so101_leader_piper \
+  --teleop.use_degrees=false \
+  --display_data=true \
+  --dataset.repo_id=local/piper-so101-smoke \
+  --dataset.root=~/robot_ws/datasets \
+  --dataset.single_task="move the gripper between two safe poses" \
+  --dataset.num_episodes=2 \
+  --dataset.episode_time_s=10 \
+  --dataset.reset_time_s=5 \
+  --dataset.push_to_hub=False
+```
+
+Or use:
+
+```bash
+PIPER_CAMERA=/dev/video0 ./scripts/record_piper_so101_smoke.sh
+```
+
+Known issue: the end effector/gripper path is not working yet. Keep smoke recordings limited to safe arm motion until the gripper mapping/control is fixed.
 
 ## Notes
 
