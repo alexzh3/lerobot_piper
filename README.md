@@ -235,6 +235,20 @@ sudo ip link set can0 up
 ip -details link show can0
 ```
 
+Reusable CAN and Piper status helper:
+
+```bash
+./scripts/piper_can_status.sh
+```
+
+Override the interface or bitrate if needed:
+
+```bash
+CAN_INTERFACE=can1 CAN_BITRATE=1000000 ./scripts/piper_can_status.sh
+```
+
+The helper brings the CAN interface up, prints SocketCAN details/statistics, then reads Piper firmware, arm status, gripper status, and SDK gripper range. It may prompt for `sudo` because `ip link set` requires elevated privileges.
+
 ## Required Piper SDK Check
 
 Do not teleoperate until this read-only SDK check works:

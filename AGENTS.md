@@ -155,3 +155,19 @@ PIPER_CAMERA=/dev/video0 ./scripts/record_piper_so101_smoke.sh
 The helper writes to `~/robot_ws/datasets` by default. Do not commit local datasets or captured camera outputs.
 
 Known issue: the end effector/gripper path is not working yet. Avoid workflows that depend on reliable gripper control until that mapping/control path is fixed.
+
+# CAN and Piper Status
+
+Use the reusable status helper before teleop or gripper debugging:
+
+```bash
+./scripts/piper_can_status.sh
+```
+
+It brings up `can0` at 1 Mbps by default, prints SocketCAN details/statistics, then reads Piper firmware, arm status, gripper status, and SDK gripper range. It may require the human operator to enter a `sudo` password.
+
+Override when needed:
+
+```bash
+CAN_INTERFACE=can1 CAN_BITRATE=1000000 ./scripts/piper_can_status.sh
+```
