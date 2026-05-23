@@ -1,0 +1,7 @@
+.venv/
+.uv-cache/
+.uv-python/
+lerobot/
+lerobot_robot_piper/
+__pycache__/
+*.py[cod]
